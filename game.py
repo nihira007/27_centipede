@@ -7,9 +7,11 @@ ZONE_TOP = ROWS - 6
 TICK, PLAYER_SPEED, BULLET_SPEED = 0.09, 260, 620
 MUSHROOM_HP = 4
 
+particles = []
 
 def mushroom_color(hp):
     """Return an (r, g, b) colour for a mushroom with the given hit points, or None for the default."""
+    #Task 2
     if hp == 4:
         return None          # Default/full-health appearance
     elif hp == 3:
@@ -22,7 +24,21 @@ def mushroom_color(hp):
 
 def on_segment_hit(segment, score):
     """Called whenever a centipede segment is shot; add sparkles, sounds, or bonus points here."""
-    pass
+    #Task 3
+    center = pygame.Vector2(
+        segment.col * CELL + CELL // 2,
+        segment.row * CELL + CELL // 2
+    )
+
+    for _ in range(8):
+        particles.append({
+            "pos": center.copy(),
+            "vel": pygame.Vector2(
+                random.uniform(-80, 80),
+                random.uniform(-80, 80)
+            ),
+            "life": 0.25
+        })
 
 
 def wave_speed_bonus(wave):
@@ -77,7 +93,7 @@ class Game:
 
     def hit_mushroom(self, cell):
         self.mushrooms[cell] -= 1
-        if self.mushrooms[cell] <= 0:
+        if self.mushrooms[cell] <= 0: # Task 1
             del self.mushrooms[cell]
             self.score += 5
 
@@ -111,6 +127,14 @@ class Game:
     def update(self, dt, keys):
         if self.state != "play":
             return
+        # Task 3
+        for particle in particles[:]:
+            particle["pos"] += particle["vel"] * dt
+            particle["life"] -= dt
+
+            if particle["life"] <= 0:
+                particles.remove(particle)
+                
         self.invulnerable = max(0.0, self.invulnerable - dt)
         self.x += (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * PLAYER_SPEED * dt
         self.y += (keys[pygame.K_DOWN] - keys[pygame.K_UP]) * PLAYER_SPEED * dt
@@ -147,6 +171,15 @@ class Game:
             for index, segment in enumerate(chain):
                 center = (segment.col * CELL + CELL // 2, segment.row * CELL + CELL // 2)
                 pygame.draw.circle(screen, (240, 200, 60) if index == 0 else (80, 220, 90), center, CELL // 2)
+                # Task 3
+                for particle in particles:
+                    pygame.draw.circle(
+                        screen,
+                        (255, 220, 80),
+                        (int(particle["pos"].x), int(particle["pos"].y)),
+                        2
+                    )
+    
         if self.bullet:
             pygame.draw.rect(screen, (255, 255, 255), (self.bullet.x - 1, self.bullet.y - 6, 3, 10))
         if self.invulnerable <= 0 or int(self.invulnerable * 10) % 2 == 0:
