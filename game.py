@@ -43,8 +43,8 @@ def on_segment_hit(segment, score):
 
 def wave_speed_bonus(wave):
     """Return an extra tick-rate multiplier for centipede segments at the given wave, or None for the default speed."""
-    pass
-
+    #Task 4
+    return 1 + 0.15 * (wave - 1)
 
 class Segment:
     def __init__(self, row, col, direction):
